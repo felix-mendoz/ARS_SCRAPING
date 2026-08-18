@@ -27,3 +27,9 @@ ARS_SCRAPING/
 ├── main.py                # Punto de entrada para ejecutar el scraping
 ├── README.md              # Documentación del proyecto
 └── requirements.txt       # Dependencias de Python necesarias
+
+## Como usar
+1. Clone el repositorio
+2. Ejecute en terminal pip install -r requirements.txt
+3. Ejecute main.py en terminal
+4. El output se generara dentro de data
