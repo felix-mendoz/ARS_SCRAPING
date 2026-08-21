@@ -1,64 +1,73 @@
-# utils.py
-import json
 import logging
-from typing import Any, Dict, List, Optional
 from urllib.parse import urljoin
 import requests
-from bs4 import BeautifulSoup
+import json
+from typing import Any, Dict, List
 
-HEADERS = {
-    "User-Agent": (
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/115.0.0.0 Safari/537.36"
-    )
-}
 
-def obtener_soup(url: str) -> Optional[BeautifulSoup]:
+def obtener_html(url: str) -> str:
     """
-    Realiza una petición HTTP y devuelve el HTML convertido
-    en un objeto BeautifulSoup.
+    Descarga el HTML de una URL.
     """
+
     try:
-        logging.info("Obteniendo: %s", url)
-
         respuesta = requests.get(
             url,
-            headers=HEADERS,
-            timeout=15,
+            timeout=30,
+            headers={
+                "User-Agent": (
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                    "AppleWebKit/537.36 (KHTML, like Gecko) "
+                    "Chrome/139.0 Safari/537.36"
+                )
+            },
         )
 
         respuesta.raise_for_status()
 
-        return BeautifulSoup(respuesta.text, "html.parser")
+        return respuesta.content.decode(
+            respuesta.encoding or "utf-8",
+            errors="replace",
+        )
 
-    except requests.RequestException as e:
-        logging.error("Error al obtener %s: %s", url, e)
-        return None
-
-def limpiar_texto(elemento) -> str:
-    """
-    Extrae texto de un elemento HTML de forma segura.
-    """
-    if not elemento:
+    except requests.RequestException:
+        logging.exception(
+            "Error al obtener la URL: %s",
+            url,
+        )
         return ""
 
-    return elemento.get_text(" ", strip=True)
 
-def obtener_url(elemento, url_base: str = "") -> str:
+def obtener_url(href: str, url_base: str) -> str:
     """
-    Obtiene el href de un elemento <a> y lo convierte
-    en URL absoluta si es necesario.
+    Convierte una URL relativa en absoluta.
     """
-    if not elemento:
-        return ""
-
-    href = elemento.get("href", "")
 
     if not href:
         return ""
 
-    return urljoin(url_base, href)
+    return urljoin(
+        url_base,
+        href,
+    )
+
+
+def limpiar_texto(elemento) -> str:
+    """
+    Extrae y limpia el texto de un elemento lxml.
+    """
+
+    if elemento is None:
+        return ""
+
+    if hasattr(elemento, "text_content"):
+        texto = elemento.text_content()
+    else:
+        texto = str(elemento)
+
+    return " ".join(
+        texto.split()
+    )
 
 def guardar_json(
     datos: List[Dict[str, Any]],
